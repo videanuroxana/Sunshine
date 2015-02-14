@@ -84,6 +84,7 @@ public class MainActivity extends ActionBarActivity {
             items.add("Sambata 14 Feb Snow 23");
             items.add("Duminica 15 Feb Sunny 13");
             items.add("Luni 15 Feb Snow 23");
+            items.add("Marti 16 Feb Snow 23");
 
 
             ArrayAdapter<String> adaptor = new ArrayAdapter<String>(getActivity(),
