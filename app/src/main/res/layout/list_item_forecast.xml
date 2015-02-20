@@ -8,11 +8,11 @@
     android:minHeight="?android:attr/listPreferredItemHeight"
     android:id="@+id/list_item_forecast_textview"
 
-    android:background="#ff9acdff"
-    android:capitalize="words"
-    android:clickable="false"
-    android:focusable="true"
+
+
+
     >
+
 
 
 </TextView>

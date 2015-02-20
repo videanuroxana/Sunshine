@@ -25,6 +25,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -93,8 +94,6 @@ public class ForecastFragment extends Fragment {
 
              Uri uri = uriBuilder.build();
 
-            Log.i(LOG_TAG,"Url-ul nostru de vreme arata asa:"+uri.toString());
-
             weatherTask.execute(uri.toString());
 
             return true;
@@ -130,9 +129,10 @@ public class ForecastFragment extends Fragment {
         ListView lv = (ListView) rootView.findViewById(R.id.list_view_forecast);
         lv.setAdapter(adaptor);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+
+
                 String forecast = adaptor.getItem(position);
                 Toast.makeText(getActivity(), forecast, Toast.LENGTH_SHORT).show();
             }
@@ -142,30 +142,19 @@ public class ForecastFragment extends Fragment {
     }
 
 
-    public class FetchWeatherTask extends AsyncTask<String, Void, String>{
+    public class FetchWeatherTask extends AsyncTask<String, Void, String[]>{
 
 
         @Override
-        public void onPostExecute(String jsonStr){
-
-            Log.i(LOG_TAG,"**************************************************************");
-            Log.e(LOG_TAG,"Jsonu este"+jsonStr);
-            Log.i(LOG_TAG,"**************************************************************");
+        public void onPostExecute(String[] items){
 
             adaptor.clear();
-            try {
-                String[] parsedInfo = getWeatherDataFromJson(jsonStr,7);
-                for(String fc:parsedInfo){
-                    adaptor.add(fc);
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
+            for(String item:items) {
+                adaptor.add(item);
             }
-
         }
 
-        public String doInBackground(String... str){
+        public String[] doInBackground(String... str){
 
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
@@ -234,7 +223,16 @@ public class ForecastFragment extends Fragment {
                 }
             }
 
-            return forecastJsonStr;
+            String[] parsedInfo = null;
+            try {
+                parsedInfo = getWeatherDataFromJson(forecastJsonStr,7);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            return parsedInfo;
+
+
         }
 
         /* The date/time conversion code is going to be moved outside the asynctask later,
