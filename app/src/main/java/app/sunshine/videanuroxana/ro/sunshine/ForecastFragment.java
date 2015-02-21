@@ -1,6 +1,7 @@
 package app.sunshine.videanuroxana.ro.sunshine;
 
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -128,13 +129,17 @@ public class ForecastFragment extends Fragment {
 
         ListView lv = (ListView) rootView.findViewById(R.id.list_view_forecast);
         lv.setAdapter(adaptor);
+
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
 
 
                 String forecast = adaptor.getItem(position);
-                Toast.makeText(getActivity(), forecast, Toast.LENGTH_SHORT).show();
+               // Toast.makeText(getActivity(), forecast, Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), DetailActivity.class)
+                        .putExtra(Intent.EXTRA_TEXT, forecast);
+                startActivity(intent);
             }
         });
 
