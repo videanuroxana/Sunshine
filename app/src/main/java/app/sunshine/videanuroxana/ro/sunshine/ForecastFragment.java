@@ -2,8 +2,10 @@ package app.sunshine.videanuroxana.ro.sunshine;
 
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -50,6 +52,15 @@ public class ForecastFragment extends Fragment {
     public ForecastFragment() {
     }
 
+
+    @Override
+    public void onStart(){
+        super.onStart();
+        updateWeather();
+    }
+
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
@@ -67,40 +78,59 @@ public class ForecastFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
+
     // Handle action bar item clicks here. The action bar will
     // automatically handle clicks on the Home/Up button, so long
     // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
-
-            FetchWeatherTask weatherTask = new FetchWeatherTask();
-
-            String locatie = "Pitesti";
-            String mode = "json";
-            String units = "metric";
-            Integer nrZile = 7;
-
-           // String weatherURL = "http://api.openweathermap.org/data/2.5/forecast/daily?q="+locatie+"&mode="+mode+"&units="+units+"&cnt="+nrZile;
-
-            final String FORECAST_BASE_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
-            final String QUERY_PARAM = "q";
-            final String FORMAT_PARAM = "mode";
-            final String UNITS_PARAM = "units";
-            final String DAYS_PARAM = "cnt";
-
-            Uri.Builder uriBuilder = Uri.parse(FORECAST_BASE_URL).buildUpon().appendQueryParameter(QUERY_PARAM, locatie)
-                    .appendQueryParameter(FORMAT_PARAM, mode)
-                    .appendQueryParameter(UNITS_PARAM, units)
-                    .appendQueryParameter(DAYS_PARAM, Integer.toString(nrZile));
-
-             Uri uri = uriBuilder.build();
-
-            weatherTask.execute(uri.toString());
-
+            updateWeather();
             return true;
+        }else if (id == R.id.action_settings){
+            Log.i(LOG_TAG,"S-a apasat settings din Forecast fragment");
         }
+
+
         return super.onOptionsItemSelected(item);
     }
+
+
+
+
+
+    private void updateWeather(){
+
+        FetchWeatherTask weatherTask = new FetchWeatherTask();
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String location = prefs.getString(getString(R.string.pref_location_key),getString(R.string.pref_location_default));
+
+
+        String mode = "json";
+        String units = "metric";
+        Integer nrZile = 7;
+
+        // String weatherURL = "http://api.openweathermap.org/data/2.5/forecast/daily?q="+locatie+"&mode="+mode+"&units="+units+"&cnt="+nrZile;
+
+        final String FORECAST_BASE_URL = "http://api.openweathermap.org/data/2.5/forecast/daily?";
+        final String QUERY_PARAM = "q";
+        final String FORMAT_PARAM = "mode";
+        final String UNITS_PARAM = "units";
+        final String DAYS_PARAM = "cnt";
+
+        Uri.Builder uriBuilder = Uri.parse(FORECAST_BASE_URL).buildUpon().appendQueryParameter(QUERY_PARAM, location)
+                .appendQueryParameter(FORMAT_PARAM, mode)
+                .appendQueryParameter(UNITS_PARAM, units)
+                .appendQueryParameter(DAYS_PARAM, Integer.toString(nrZile));
+
+        Uri uri = uriBuilder.build();
+
+        weatherTask.execute(uri.toString());
+
+    }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
@@ -110,7 +140,8 @@ public class ForecastFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         List<String> items = new ArrayList<String>();
-        items.add("Luni 09 Feb Sunny 23");
+
+       /* items.add("Luni 09 Feb Sunny 23");
         items.add("Marti 10 Feb Sunny 24");
         items.add("Miercuri 11 Feb Sunny 25");
         items.add("Joi 12 Feb Sunny 26");
@@ -119,6 +150,7 @@ public class ForecastFragment extends Fragment {
         items.add("Duminica 15 Feb Sunny 13");
         items.add("Luni 15 Feb Snow 23");
         items.add("Marti 16 Feb Snow 23");
+        */
 
 
         adaptor = new ArrayAdapter<String>(
@@ -134,11 +166,10 @@ public class ForecastFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
 
-
                 String forecast = adaptor.getItem(position);
                // Toast.makeText(getActivity(), forecast, Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(getActivity(), DetailActivity.class)
-                        .putExtra(Intent.EXTRA_TEXT, forecast);
+                Intent intent = new Intent(getActivity(), DetailActivity.class).putExtra(Intent.EXTRA_TEXT, forecast);
+
                 startActivity(intent);
             }
         });
@@ -255,6 +286,21 @@ public class ForecastFragment extends Fragment {
          * Prepare the weather high/lows for presentation.
          */
         private String formatHighLows(double high, double low) {
+            // Data is fetched in Celsius by default.
+        // If user prefers to see in Fahrenheit, convert the values here.
+        // We do this rather than fetching in Fahrenheit so that the user can
+        // change this option without us having to re-fetch the data once
+        // we start storing the values in a database.
+            SharedPreferences sharedPrefs =  PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String unitType = sharedPrefs.getString(getString(R.string.pref_units_key),  getString(R.string.pref_units_metric));
+
+            if (unitType.equals(getString(R.string.pref_units_imperial))) {
+                high = (high * 1.8) + 32;
+                low = (low * 1.8) + 32;
+            } else if (!unitType.equals(getString(R.string.pref_units_metric))) {
+                Log.d(LOG_TAG, "Unit type not found: " + unitType);
+            }
+
             // For presentation, assume the user doesn't care about tenths of a degree.
             long roundedHigh = Math.round(high);
             long roundedLow = Math.round(low);
